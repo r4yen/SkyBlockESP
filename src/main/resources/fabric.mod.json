@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "skyblockesp",
+  "version": "${version}",
+  "name": "SkyBlockESP",
+  "description": "",
+  "authors": [
+    "raaayen"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/skyblockesp/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "cc.rayen.skyblockesp.client.SkyBlockESPDataGenerator"
+    ],
+    "client": [
+      "cc.rayen.skyblockesp.client.SkyBlockESPClient"
+    ],
+    "modmenu": [
+      "cc.rayen.skyblockesp.client.config.SkyBlockESPModMenu"
+    ],
+    "main": [
+      "cc.rayen.skyblockesp.SkyBlockESP"
+    ]
+  },
+  "mixins": [
+    "skyblockesp.mixins.json"
+  ],
+  "accessWidener": "skyblockesp.accesswidener",
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

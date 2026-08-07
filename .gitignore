@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# Minecraft run directory
+run/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Local/generated metadata
+META-INF/
+
+# Logs and crash reports
+*.log
+*.log.gz
+crash-reports/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
