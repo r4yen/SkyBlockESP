@@ -6,6 +6,7 @@
   "mixins": [
   ],
   "client": [
+    "FontTextReplaceMixin"
   ],
   "injectors": {
     "defaultRequire": 1
