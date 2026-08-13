@@ -1,4 +1,7 @@
-package cc.rayen.skyblockesp.client.feature;
+package cc.rayen.skyblockesp.client.feature.categories;
+
+import cc.rayen.skyblockesp.client.feature.ESPMarkers;
+import cc.rayen.skyblockesp.client.feature.FairySoulPositions;
 
 import cc.rayen.skyblockesp.client.config.SkyBlockESPConfig;
 import cc.rayen.skyblockesp.client.island.CurrentIsland;
@@ -33,25 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class SafariEsp {
-    private static final int BELL_STROKE_COLOR = 0xFFFFE066;
-    private static final int BELL_FILL_COLOR = 0x14FFE066;
-    private static final int BELL_TEXT_COLOR = 0xFFFFE066;
-    private static final int SPECIAL_STROKE_COLOR = 0xFFFFFFFF;
-    private static final int SPECIAL_FILL_COLOR = 0x14FFFFFF;
-    private static final int SPECIAL_TEXT_COLOR = 0xFFFFFFFF;
-    private static final int CAVERN_STROKE_COLOR = 0xFFFF8C1A;
-    private static final int CAVERN_FILL_COLOR = 0x14FF8C1A;
-    private static final int CAVERN_TEXT_COLOR = 0xFFFFB15C;
-    private static final int FOREST_STROKE_COLOR = 0xFFB6FF6A;
-    private static final int FOREST_FILL_COLOR = 0x14B6FF6A;
-    private static final int FOREST_TEXT_COLOR = 0xFFD8FFA8;
-    private static final int HAUNTED_STROKE_COLOR = 0xFFC45CFF;
-    private static final int HAUNTED_FILL_COLOR = 0x14C45CFF;
-    private static final int HAUNTED_TEXT_COLOR = 0xFFE0A8FF;
-    private static final int ICY_STROKE_COLOR = 0xFF40FFE6;
-    private static final int ICY_FILL_COLOR = 0x1440FFE6;
-    private static final int ICY_TEXT_COLOR = 0xFF9DFFF2;
+public final class SafariESP {
     private static final int SAFARI_MIN_Y = 28;
     private static final float TITLE_SCALE = 0.035f;
     private static final double SHYWORM_DUPLICATE_POSITION_TOLERANCE = 0.01;
@@ -98,6 +83,7 @@ public final class SafariEsp {
             new BlockPos(-90, 109, 16)
     };
     private static final List<BlockPos> beeNestPositions = new ArrayList<>();
+    private static final List<BlockPos> pendingBeeNestPositions = new ArrayList<>();
     private static final Set<BlockPos> suppressedBeeNests = new HashSet<>();
     private static long lastBeeNestScanMillis;
     private static boolean beeNestScanInProgress;
@@ -112,19 +98,55 @@ public final class SafariEsp {
     private static int beeNestScanZ;
     private static BlockPos lastInteractedBeeNest;
     private static long lastBeeNestInteractMillis;
-    private static HauntedBedGroup lastInteractedBedGroup;
+    private static HauntedBed lastInteractedBed;
     private static long lastBedInteractMillis;
-    private static HauntedBedGroup activeSleepingBedGroup;
+    private static HauntedBed activeSleepingBed;
     private static boolean wasSleepingInHauntedBed;
-    private static final Set<HauntedBedGroup> suppressedHauntedBedGroups = new HashSet<>();
+    private static final Set<HauntedBed> suppressedHauntedBeds = new HashSet<>();
     private static boolean hideyhoHiding;
 
-    private SafariEsp() {
+    private SafariESP() {
+    }
+
+    private static int bestiaryStrokeColor() {
+        return ESPMarkers.colorA();
+    }
+
+    private static int bestiaryFillColor() {
+        return ESPMarkers.colorAFill();
+    }
+
+    private static int bestiaryTextColor() {
+        return ESPMarkers.colorA();
+    }
+
+    private static int generalEntityStrokeColor() {
+        return ESPMarkers.colorB();
+    }
+
+    private static int generalEntityFillColor() {
+        return ESPMarkers.colorBFill();
+    }
+
+    private static int generalEntityTextColor() {
+        return ESPMarkers.colorB();
+    }
+
+    private static int otherStrokeColor() {
+        return ESPMarkers.colorC();
+    }
+
+    private static int otherFillColor() {
+        return ESPMarkers.colorCFill();
+    }
+
+    private static int otherTextColor() {
+        return ESPMarkers.colorC();
     }
 
     public static void render(Minecraft client) {
         SkyBlockESPConfig.Desert config = SkyBlockESPConfig.INSTANCE.desert;
-        if (client.level == null || client.player == null || !hasAnySafariEspEnabled(config)) {
+        if (client.level == null || client.player == null || !hasAnySafariESPEnabled(config)) {
             return;
         }
         if (!CurrentIsland.isIsland("Safari")) {
@@ -135,7 +157,7 @@ public final class SafariEsp {
         try (var ignored = client.levelRenderer.collectPerFrameGizmos()) {
             if (hideyhoHiding) {
                 if (config.hideyho) {
-                    renderHauntedEsp(client, config);
+                    renderHauntedESP(client, config);
                 }
                 return;
             }
@@ -147,22 +169,22 @@ public final class SafariEsp {
                 renderThrowLine(client, config);
             }
             if (config.fairySouls) {
-                renderFairySouls(client);
+                renderSafariFairySouls();
             }
             if (hasAnyFloorDropsEnabled(config)) {
                 renderFloorDrops(client, config);
             }
-            if (hasAnyCavernEspEnabled(config)) {
-                renderCavernEsp(client, config);
+            if (hasAnyCavernESPEnabled(config)) {
+                renderCavernESP(client, config);
             }
-            if (hasAnyForestEspEnabled(config)) {
-                renderForestEsp(client, config);
+            if (hasAnyForestESPEnabled(config)) {
+                renderForestESP(client, config);
             }
-            if (hasAnyHauntedEspEnabled(config)) {
-                renderHauntedEsp(client, config);
+            if (hasAnyHauntedESPEnabled(config)) {
+                renderHauntedESP(client, config);
             }
-            if (hasAnyIcyEspEnabled(config)) {
-                renderIcyEsp(client, config);
+            if (hasAnyIcyESPEnabled(config)) {
+                renderIcyESP(client, config);
             }
         }
     }
@@ -180,9 +202,9 @@ public final class SafariEsp {
         }
 
         if (state.getBlock() instanceof BedBlock) {
-            HauntedBedGroup group = hauntedBedGroupAt(pos);
-            if (group != null) {
-                lastInteractedBedGroup = group;
+            HauntedBed bed = hauntedBedAt(pos);
+            if (bed != null) {
+                lastInteractedBed = bed;
                 lastBedInteractMillis = System.currentTimeMillis();
             }
         }
@@ -208,32 +230,40 @@ public final class SafariEsp {
             lastBeeNestInteractMillis = 0L;
         }
 
-        if (lastInteractedBedGroup != null
+        if (lastInteractedBed != null
                 && System.currentTimeMillis() - lastBedInteractMillis <= BED_MESSAGE_WINDOW_MILLIS
                 && normalizedMessage.contains("You don't feel like sleeping here again.")) {
-            suppressHauntedBedGroup(lastInteractedBedGroup);
-            lastInteractedBedGroup = null;
+            suppressHauntedBed(lastInteractedBed);
+            lastInteractedBed = null;
             lastBedInteractMillis = 0L;
         }
     }
 
     private static void clearSafariState() {
         beeNestPositions.clear();
+        pendingBeeNestPositions.clear();
         suppressedBeeNests.clear();
         lastBeeNestScanMillis = 0L;
         beeNestScanInProgress = false;
         lastInteractedBeeNest = null;
         lastBeeNestInteractMillis = 0L;
-        lastInteractedBedGroup = null;
+        lastInteractedBed = null;
         lastBedInteractMillis = 0L;
-        activeSleepingBedGroup = null;
+        activeSleepingBed = null;
         wasSleepingInHauntedBed = false;
-        suppressedHauntedBedGroups.clear();
+        suppressedHauntedBeds.clear();
         hideyhoHiding = false;
     }
 
-    private static boolean hasAnySafariEspEnabled(SkyBlockESPConfig.Desert config) {
-        return config.fairySouls || config.bells || config.throwLine || hasAnyFloorDropsEnabled(config) || hasAnyCavernEspEnabled(config) || hasAnyForestEspEnabled(config) || hasAnyHauntedEspEnabled(config) || hasAnyIcyEspEnabled(config);
+    private static boolean hasAnySafariESPEnabled(SkyBlockESPConfig.Desert config) {
+        return config.fairySouls
+                || config.bells
+                || config.throwLine
+                || hasAnyFloorDropsEnabled(config)
+                || hasAnyCavernESPEnabled(config)
+                || hasAnyForestESPEnabled(config)
+                || hasAnyHauntedESPEnabled(config)
+                || hasAnyIcyESPEnabled(config);
     }
 
     private static boolean hasAnyFloorDropsEnabled(SkyBlockESPConfig.Desert config) {
@@ -243,7 +273,7 @@ public final class SafariEsp {
                 || config.icyFloorDrops;
     }
 
-    private static boolean hasAnyCavernEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyCavernESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.cavernfish
                 || config.flitter
                 || config.shyworm
@@ -256,7 +286,7 @@ public final class SafariEsp {
                 || config.gemzie;
     }
 
-    private static boolean hasAnyForestEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyForestESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.forestBeeNest
                 || config.forestBirdfeeder
                 || config.foxtrot
@@ -270,14 +300,14 @@ public final class SafariEsp {
                 || config.macaw;
     }
 
-    private static boolean hasAnyHauntedEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyHauntedESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.hauntedBeds
                 || config.doomspiralCandles
                 || config.shiningCoinWater
-                || hasAnyHauntedEntityEspEnabled(config);
+                || hasAnyHauntedEntityESPEnabled(config);
     }
 
-    private static boolean hasAnyHauntedEntityEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyHauntedEntityESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.areita
                 || config.bloodbat
                 || config.duplico
@@ -290,7 +320,7 @@ public final class SafariEsp {
                 || config.doomspiral;
     }
 
-    private static boolean hasAnyIcyEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyIcyESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.strongarm
                 || config.tepid
                 || config.polaris
@@ -304,16 +334,13 @@ public final class SafariEsp {
 
     private static void renderBells() {
         for (BlockPos pos : BELL_POSITIONS) {
-            renderMarker(pos, "Bell", BELL_STROKE_COLOR, BELL_FILL_COLOR, BELL_TEXT_COLOR);
+            renderMarker(pos, "Bell", otherStrokeColor(), otherFillColor(), otherTextColor());
         }
     }
 
-    private static void renderFairySouls(Minecraft client) {
-        float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        for (Entity entity : client.level.entitiesForRendering()) {
-            if (isSafariHeight(entity.blockPosition()) && isFairySoul(entity)) {
-                renderUpperQuarterMarker(entity, partialTick, "Fairy Soul", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
-            }
+    private static void renderSafariFairySouls() {
+        for (BlockPos pos : FairySoulPositions.forIsland("Safari")) {
+            renderMarker(pos, "Fairy Soul", otherStrokeColor(), otherFillColor(), otherTextColor());
         }
     }
 
@@ -327,11 +354,11 @@ public final class SafariEsp {
             if (regionOf(BlockPos.containing(box.getCenter())) != currentRegion) {
                 continue;
             }
-            renderBoxMarker(box, "Floor Drop", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+            renderBoxMarker(box, "Floor Drop", otherStrokeColor(), otherFillColor(), otherTextColor());
         }
     }
 
-    private static void renderCavernEsp(Minecraft client, SkyBlockESPConfig.Desert config) {
+    private static void renderCavernESP(Minecraft client, SkyBlockESPConfig.Desert config) {
         if (!isCavernPosition(client.player.blockPosition())) {
             return;
         }
@@ -345,61 +372,61 @@ public final class SafariEsp {
             }
 
             if (config.cavernfish && isCavernfish(entity)) {
-                renderEntityMarker(entity, partialTick, "Cavernfish", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Cavernfish", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.flitter && entity.getType() == EntityType.BAT) {
-                renderEntityMarker(entity, partialTick, "Flitter", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Flitter", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.shyworm && entity.getType() == EntityType.SLIME) {
                 if (!isDuplicatePosition(entity.position(), renderedShywormPositions, SHYWORM_DUPLICATE_POSITION_TOLERANCE)) {
                     renderedShywormPositions.add(entity.position());
-                    renderEntityMarker(entity, partialTick, "Shyworm", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                    renderEntityMarker(entity, partialTick, "Shyworm", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
                 }
             }
             if (config.driftling && isDriftling(entity)) {
-                renderUpperQuarterMarker(entity, partialTick, "Driftling", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderUpperQuarterMarker(entity, partialTick, "Driftling", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.chuckwalla && entity.getType() == EntityType.SILVERFISH && entity.isInvisible()) {
-                renderEntityMarker(entity, partialTick, "Chuckwalla", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Chuckwalla", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.rockmite && entity.getType() == EntityType.SILVERFISH && !entity.isInvisible()) {
-                renderEntityMarker(entity, partialTick, "Rockmite", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Rockmite", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.rockmiteHome && isRockmiteHome(entity)) {
-                renderEntityMarker(entity, partialTick, "Rockmite's Home", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Rockmite's Home", otherStrokeColor(), otherFillColor(), otherTextColor());
             }
             if (config.scrappy && entity.getType() == EntityType.ARMADILLO) {
-                renderEntityMarker(entity, partialTick, "Scrappy", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Scrappy", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.snoozle && entity.getType() == EntityType.SNIFFER) {
-                renderEntityMarker(entity, partialTick, "Snoozle", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Snoozle", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.gemzie && client.level.getBlockState(GEMZIE_SWITCH_POS).isAir() && entity.getType() == EntityType.VEX) {
-                renderEntityMarker(entity, partialTick, "Gemzie", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Gemzie", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
         }
 
         if (config.gemzie && !client.level.getBlockState(GEMZIE_SWITCH_POS).isAir()) {
             for (BlockPos pos : GEMZIE_FIXED_POSITIONS) {
-                renderMarker(pos, "Gemzie", CAVERN_STROKE_COLOR, CAVERN_FILL_COLOR, CAVERN_TEXT_COLOR);
+                renderMarker(pos, "Gemzie", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
         }
     }
 
-    private static void renderForestEsp(Minecraft client, SkyBlockESPConfig.Desert config) {
+    private static void renderForestESP(Minecraft client, SkyBlockESPConfig.Desert config) {
         if (!isForestPosition(client.player.blockPosition())) {
             return;
         }
 
         if (config.forestBirdfeeder && hasInventoryItemNamed(client, "Wriggleworm", "Yogi Berry", "Bag of Seeds")) {
-            renderTallMarker(BIRDFEEDER_POS, 2.0, "Birdfeeder", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+            renderTallMarker(BIRDFEEDER_POS, 2.0, "Birdfeeder", otherStrokeColor(), otherFillColor(), otherTextColor());
         }
 
         if (config.forestBeeNest) {
             renderBeeNests(client);
         }
 
-        if (!hasAnyForestEntityEspEnabled(config)) {
+        if (!hasAnyForestEntityESPEnabled(config)) {
             return;
         }
 
@@ -410,36 +437,36 @@ public final class SafariEsp {
             }
 
             if (config.foxtrot && entity.getType() == EntityType.FOX) {
-                renderEntityMarker(entity, partialTick, "Foxtrot", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Foxtrot", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.bluebird && isParrotVariant(entity, Parrot.Variant.BLUE)) {
-                renderEntityMarker(entity, partialTick, "Bluebird", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Bluebird", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.honeybug && entity.getType() == EntityType.BEE) {
-                renderEntityMarker(entity, partialTick, "Honeybug", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Honeybug", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.treefrog && entity.getType() == EntityType.FROG) {
-                renderEntityMarker(entity, partialTick, "Treefrog", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Treefrog", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.woodchucker && entity.getType() == EntityType.CREAKING) {
-                renderEntityMarker(entity, partialTick, "Woodchucker", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Woodchucker", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.fluffling && entity.getType() == EntityType.PANDA) {
-                renderEntityMarker(entity, partialTick, "Fluffling", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Fluffling", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.hideonfloor && entity.getType() == EntityType.SHULKER) {
-                renderEntityMarker(entity, partialTick, "Hideonfloor", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Hideonfloor", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.paraket && isParrotVariant(entity, Parrot.Variant.GREEN)) {
-                renderEntityMarker(entity, partialTick, "Paraket", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Paraket", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.macaw && isParrotVariant(entity, Parrot.Variant.RED_BLUE)) {
-                renderEntityMarker(entity, partialTick, "Macaw", FOREST_STROKE_COLOR, FOREST_FILL_COLOR, FOREST_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Macaw", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
         }
     }
 
-    private static void renderHauntedEsp(Minecraft client, SkyBlockESPConfig.Desert config) {
+    private static void renderHauntedESP(Minecraft client, SkyBlockESPConfig.Desert config) {
         if (!isHauntedPosition(client.player.blockPosition())) {
             return;
         }
@@ -453,7 +480,7 @@ public final class SafariEsp {
         if (!hideyhoHiding && config.shiningCoinWater && hasInventoryItemNamed(client, "Shining Coin")) {
             renderShiningCoinWater(client);
         }
-        if (!hasAnyHauntedEntityEspEnabled(config)) {
+        if (!hasAnyHauntedEntityESPEnabled(config)) {
             return;
         }
 
@@ -464,7 +491,7 @@ public final class SafariEsp {
             }
 
             if (config.hideyho && isHideyho(entity)) {
-                renderEntityMarker(entity, partialTick, "Hideyho", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Hideyho", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
 
             if (hideyhoHiding) {
@@ -472,36 +499,36 @@ public final class SafariEsp {
             }
 
             if (config.areita && entity.getType() == EntityType.CAVE_SPIDER) {
-                renderEntityMarker(entity, partialTick, "Areita", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Areita", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.bloodbat && entity.getType() == EntityType.BAT) {
-                renderEntityMarker(entity, partialTick, "Bloodbat", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Bloodbat", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.duplico && isSizedEntity(entity, EntityType.INTERACTION, 1.1, 1.1, 1.1)) {
-                renderSizedEntityMarker(entity, partialTick, 1.0, 1.0, 1.0, "Duplico", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderSizedEntityMarker(entity, partialTick, 1.0, 1.0, 1.0, "Duplico", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.gazer && isGazer(entity)) {
-                renderUpperQuarterMarker(entity, partialTick, "Gazer", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderUpperQuarterMarker(entity, partialTick, "Gazer", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.litterbug && entity.getType() == EntityType.ENDERMITE) {
-                renderEntityMarker(entity, partialTick, "Litterbug", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Litterbug", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.solsnatcher && entity.getType() == EntityType.PHANTOM) {
-                renderEntityMarker(entity, partialTick, "Solsnatcher", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Solsnatcher", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.gimmiegold && entity.getType() == EntityType.TROPICAL_FISH) {
-                renderEntityMarker(entity, partialTick, "Gimmiegold", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Gimmiegold", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.hideonwall && isHideonwall(entity)) {
-                renderEntityMarker(entity, partialTick, "Hideonwall", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Hideonwall", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.doomspiral && entity.getType() == EntityType.WARDEN) {
-                renderEntityMarker(entity, partialTick, "Doomspiral", HAUNTED_STROKE_COLOR, HAUNTED_FILL_COLOR, HAUNTED_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Doomspiral", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
         }
     }
 
-    private static void renderIcyEsp(Minecraft client, SkyBlockESPConfig.Desert config) {
+    private static void renderIcyESP(Minecraft client, SkyBlockESPConfig.Desert config) {
         if (!isIcyPosition(client.player.blockPosition())) {
             return;
         }
@@ -513,36 +540,36 @@ public final class SafariEsp {
             }
 
             if (config.strongarm && entity.getType() == EntityType.SNOW_GOLEM) {
-                renderEntityMarker(entity, partialTick, "Strongarm", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Strongarm", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.tepid && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.5, 0.4, 0.5)) {
-                renderEntityMarker(entity, partialTick, "Tepid", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Tepid", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.polaris && entity.getType() == EntityType.POLAR_BEAR) {
-                renderEntityMarker(entity, partialTick, "Polaris", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Polaris", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.shuddersquid && entity.getType() == EntityType.GLOW_SQUID) {
-                renderEntityMarker(entity, partialTick, "Shuddersquid", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Shuddersquid", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.billygoat && entity.getType() == EntityType.GOAT) {
-                renderEntityMarker(entity, partialTick, "Billygoat", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Billygoat", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.mantisShrimp && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.7, 0.56, 0.7)) {
-                renderEntityMarker(entity, partialTick, "Mantis Shrimp", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Mantis Shrimp", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.nozzlenose && entity.getType() == EntityType.DOLPHIN) {
-                renderEntityMarker(entity, partialTick, "Nozzlenose", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Nozzlenose", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.troodon && entity.getType() == EntityType.SILVERFISH) {
-                renderEntityMarker(entity, partialTick, "Troodon", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Troodon", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
             if (config.wumpa && entity.getType() == EntityType.RAVAGER) {
-                renderEntityMarker(entity, partialTick, "Wumpa", ICY_STROKE_COLOR, ICY_FILL_COLOR, ICY_TEXT_COLOR);
+                renderEntityMarker(entity, partialTick, "Wumpa", bestiaryStrokeColor(), bestiaryFillColor(), bestiaryTextColor());
             }
         }
     }
 
-    private static boolean hasAnyForestEntityEspEnabled(SkyBlockESPConfig.Desert config) {
+    private static boolean hasAnyForestEntityESPEnabled(SkyBlockESPConfig.Desert config) {
         return config.foxtrot
                 || config.bluebird
                 || config.honeybug
@@ -563,7 +590,7 @@ public final class SafariEsp {
         float partialTick = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         Vec3 previous = client.player.getEyePosition(partialTick);
         Vec3 velocity = initialThrowLineVelocity(client.player.getViewVector(partialTick).normalize());
-        int color = SPECIAL_STROKE_COLOR;
+        int color = otherStrokeColor();
 
         for (int step = 0; step < THROW_LINE_MAX_STEPS; step++) {
             Vec3 next = previous.add(velocity.scale(THROW_LINE_STEP_SECONDS));
@@ -639,7 +666,7 @@ public final class SafariEsp {
         updateBeeNestCache(client);
         for (BlockPos pos : beeNestPositions) {
             if (!suppressedBeeNests.contains(pos) && isForestPosition(pos)) {
-                renderMarker(pos, "Bee Nest", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+                renderMarker(pos, "Bee Nest", otherStrokeColor(), otherFillColor(), otherTextColor());
             }
         }
     }
@@ -647,49 +674,46 @@ public final class SafariEsp {
     private static void renderHauntedBeds(Minecraft client) {
         updateHauntedBedSleepState(client);
 
-        if (!suppressedHauntedBedGroups.contains(HauntedBedGroup.WEST)) {
-            renderHauntedBedBox(new BlockPos(-26, 77, -64), new BlockPos(-25, 77, -64));
-            renderHauntedBedBox(new BlockPos(-26, 77, -69), new BlockPos(-25, 77, -69));
-        }
-        if (!suppressedHauntedBedGroups.contains(HauntedBedGroup.EAST)) {
-            renderHauntedBedBox(new BlockPos(8, 77, -81), new BlockPos(8, 77, -80));
-            renderHauntedBedBox(new BlockPos(13, 77, -81), new BlockPos(13, 77, -80));
+        for (HauntedBed bed : HauntedBed.values()) {
+            if (!suppressedHauntedBeds.contains(bed)) {
+                renderHauntedBedBox(bed);
+            }
         }
     }
 
     private static void updateHauntedBedSleepState(Minecraft client) {
         boolean isSleeping = client.player.getSleepTimer() > 0;
         long now = System.currentTimeMillis();
-        if (isSleeping && lastInteractedBedGroup != null && now - lastBedInteractMillis <= 3000L) {
-            activeSleepingBedGroup = lastInteractedBedGroup;
+        if (isSleeping && lastInteractedBed != null && now - lastBedInteractMillis <= 3000L) {
+            activeSleepingBed = lastInteractedBed;
             wasSleepingInHauntedBed = true;
             return;
         }
 
-        if (!isSleeping && wasSleepingInHauntedBed && activeSleepingBedGroup != null) {
-            suppressHauntedBedGroup(activeSleepingBedGroup);
-            activeSleepingBedGroup = null;
+        if (!isSleeping && wasSleepingInHauntedBed && activeSleepingBed != null) {
+            suppressHauntedBed(activeSleepingBed);
+            activeSleepingBed = null;
             wasSleepingInHauntedBed = false;
         }
     }
 
-    private static void renderHauntedBedBox(BlockPos first, BlockPos second) {
-        AABB box = inclusiveBlockBox(first, second);
-        renderBoxMarker(box, "Bed", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+    private static void renderHauntedBedBox(HauntedBed bed) {
+        AABB box = inclusiveBlockBox(bed.first, bed.second);
+        renderBoxMarker(box, "Bed", otherStrokeColor(), otherFillColor(), otherTextColor());
     }
 
     private static void renderDoomspiralCandles(Minecraft client) {
         for (BlockPos pos : DOOMSPIRAL_CANDLE_POSITIONS) {
             BlockState state = client.level.getBlockState(pos);
             if (state.hasProperty(BlockStateProperties.LIT) && !state.getValue(BlockStateProperties.LIT)) {
-                renderMarker(pos, "Doomspiral Candle", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+                renderMarker(pos, "Doomspiral Candle", otherStrokeColor(), otherFillColor(), otherTextColor());
             }
         }
     }
 
     private static void renderShiningCoinWater(Minecraft client) {
-        renderBoxMarker(inclusiveBlockBox(SHINING_COIN_WATER_WEST_FROM, SHINING_COIN_WATER_WEST_TO), "Shining Coin Water", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
-        renderBoxMarker(inclusiveBlockBox(SHINING_COIN_WATER_EAST_FROM, SHINING_COIN_WATER_EAST_TO), "Shining Coin Water", SPECIAL_STROKE_COLOR, SPECIAL_FILL_COLOR, SPECIAL_TEXT_COLOR);
+        renderBoxMarker(inclusiveBlockBox(SHINING_COIN_WATER_WEST_FROM, SHINING_COIN_WATER_WEST_TO), "Shining Coin Water", otherStrokeColor(), otherFillColor(), otherTextColor());
+        renderBoxMarker(inclusiveBlockBox(SHINING_COIN_WATER_EAST_FROM, SHINING_COIN_WATER_EAST_TO), "Shining Coin Water", otherStrokeColor(), otherFillColor(), otherTextColor());
     }
 
     private static AABB inclusiveBlockBox(BlockPos first, BlockPos second) {
@@ -702,18 +726,17 @@ public final class SafariEsp {
         return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
-    private static HauntedBedGroup hauntedBedGroupAt(BlockPos pos) {
-        if (pos.getY() == 77 && pos.getX() >= -26 && pos.getX() <= -25 && (pos.getZ() == -64 || pos.getZ() == -69)) {
-            return HauntedBedGroup.WEST;
-        }
-        if (pos.getY() == 77 && (pos.getX() == 8 || pos.getX() == 13) && pos.getZ() >= -81 && pos.getZ() <= -80) {
-            return HauntedBedGroup.EAST;
+    private static HauntedBed hauntedBedAt(BlockPos pos) {
+        for (HauntedBed bed : HauntedBed.values()) {
+            if (bed.contains(pos)) {
+                return bed;
+            }
         }
         return null;
     }
 
-    private static void suppressHauntedBedGroup(HauntedBedGroup group) {
-        suppressedHauntedBedGroups.add(group);
+    private static void suppressHauntedBed(HauntedBed bed) {
+        suppressedHauntedBeds.add(bed);
     }
 
     private static void updateBeeNestCache(Minecraft client) {
@@ -730,16 +753,22 @@ public final class SafariEsp {
         while (beeNestScanInProgress && checkedBlocks < BEE_NEST_SCAN_BLOCKS_PER_FRAME) {
             BlockPos pos = new BlockPos(beeNestScanX, beeNestScanY, beeNestScanZ);
             if (isSafariHeight(pos) && isForestPosition(pos) && client.level.getBlockState(pos).is(Blocks.BEE_NEST)) {
-                beeNestPositions.add(pos.immutable());
+                pendingBeeNestPositions.add(pos.immutable());
             }
             advanceBeeNestScan();
             checkedBlocks++;
+        }
+
+        if (!beeNestScanInProgress) {
+            beeNestPositions.clear();
+            beeNestPositions.addAll(pendingBeeNestPositions);
+            pendingBeeNestPositions.clear();
         }
     }
 
     private static void beginBeeNestScan(Minecraft client) {
         lastBeeNestScanMillis = System.currentTimeMillis();
-        beeNestPositions.clear();
+        pendingBeeNestPositions.clear();
 
         BlockPos center = client.player.blockPosition();
         beeNestScanMinX = center.getX() - BEE_NEST_SCAN_RADIUS;
@@ -783,7 +812,7 @@ public final class SafariEsp {
         );
 
         List<Display.ItemDisplay> displays = new ArrayList<>();
-        for (Entity entity : client.level.getEntities(client.player, scanBox, SafariEsp::isFloorDropDisplay)) {
+        for (Entity entity : client.level.getEntities(client.player, scanBox, SafariESP::isFloorDropDisplay)) {
             displays.add((Display.ItemDisplay) entity);
         }
 
@@ -948,10 +977,6 @@ public final class SafariEsp {
         return isHeadItemArmorStand(entity) && hasMaxHealth(entity, 1.0);
     }
 
-    private static boolean isFairySoul(Entity entity) {
-        return isHeadItemArmorStand(entity) && hasMaxHealth(entity, 20.0);
-    }
-
     private static boolean isHeadItemArmorStand(Entity entity) {
         if (!(entity instanceof ArmorStand armorStand)
                 || !isSizedEntity(entity, EntityType.ARMOR_STAND, 0.5, 1.975, 0.5)) {
@@ -1000,55 +1025,55 @@ public final class SafariEsp {
 
     private static int espColorForEntity(Entity entity, SkyBlockESPConfig.Desert config) {
         if (isCavernPosition(entity.blockPosition()) && !hideyhoHiding) {
-            if (config.cavernfish && isCavernfish(entity)) return CAVERN_STROKE_COLOR;
-            if (config.flitter && entity.getType() == EntityType.BAT) return CAVERN_STROKE_COLOR;
-            if (config.shyworm && entity.getType() == EntityType.SLIME) return CAVERN_STROKE_COLOR;
-            if (config.driftling && isDriftling(entity)) return CAVERN_STROKE_COLOR;
-            if (config.chuckwalla && entity.getType() == EntityType.SILVERFISH && entity.isInvisible()) return CAVERN_STROKE_COLOR;
-            if (config.rockmite && entity.getType() == EntityType.SILVERFISH && !entity.isInvisible()) return CAVERN_STROKE_COLOR;
-            if (config.rockmiteHome && isRockmiteHome(entity)) return SPECIAL_STROKE_COLOR;
-            if (config.scrappy && entity.getType() == EntityType.ARMADILLO) return CAVERN_STROKE_COLOR;
-            if (config.snoozle && entity.getType() == EntityType.SNIFFER) return CAVERN_STROKE_COLOR;
-            if (config.gemzie && entity.getType() == EntityType.VEX) return CAVERN_STROKE_COLOR;
+            if (config.cavernfish && isCavernfish(entity)) return bestiaryStrokeColor();
+            if (config.flitter && entity.getType() == EntityType.BAT) return bestiaryStrokeColor();
+            if (config.shyworm && entity.getType() == EntityType.SLIME) return bestiaryStrokeColor();
+            if (config.driftling && isDriftling(entity)) return bestiaryStrokeColor();
+            if (config.chuckwalla && entity.getType() == EntityType.SILVERFISH && entity.isInvisible()) return bestiaryStrokeColor();
+            if (config.rockmite && entity.getType() == EntityType.SILVERFISH && !entity.isInvisible()) return bestiaryStrokeColor();
+            if (config.rockmiteHome && isRockmiteHome(entity)) return otherStrokeColor();
+            if (config.scrappy && entity.getType() == EntityType.ARMADILLO) return bestiaryStrokeColor();
+            if (config.snoozle && entity.getType() == EntityType.SNIFFER) return bestiaryStrokeColor();
+            if (config.gemzie && entity.getType() == EntityType.VEX) return bestiaryStrokeColor();
         }
 
         if (isForestPosition(entity.blockPosition())) {
-            if (config.foxtrot && entity.getType() == EntityType.FOX) return FOREST_STROKE_COLOR;
-            if (config.bluebird && isParrotVariant(entity, Parrot.Variant.BLUE)) return FOREST_STROKE_COLOR;
-            if (config.honeybug && entity.getType() == EntityType.BEE) return FOREST_STROKE_COLOR;
-            if (config.treefrog && entity.getType() == EntityType.FROG) return FOREST_STROKE_COLOR;
-            if (config.woodchucker && entity.getType() == EntityType.CREAKING) return FOREST_STROKE_COLOR;
-            if (config.fluffling && entity.getType() == EntityType.PANDA) return FOREST_STROKE_COLOR;
-            if (config.hideonfloor && entity.getType() == EntityType.SHULKER) return FOREST_STROKE_COLOR;
-            if (config.paraket && isParrotVariant(entity, Parrot.Variant.GREEN)) return FOREST_STROKE_COLOR;
-            if (config.macaw && isParrotVariant(entity, Parrot.Variant.RED_BLUE)) return FOREST_STROKE_COLOR;
+            if (config.foxtrot && entity.getType() == EntityType.FOX) return bestiaryStrokeColor();
+            if (config.bluebird && isParrotVariant(entity, Parrot.Variant.BLUE)) return bestiaryStrokeColor();
+            if (config.honeybug && entity.getType() == EntityType.BEE) return bestiaryStrokeColor();
+            if (config.treefrog && entity.getType() == EntityType.FROG) return bestiaryStrokeColor();
+            if (config.woodchucker && entity.getType() == EntityType.CREAKING) return bestiaryStrokeColor();
+            if (config.fluffling && entity.getType() == EntityType.PANDA) return bestiaryStrokeColor();
+            if (config.hideonfloor && entity.getType() == EntityType.SHULKER) return bestiaryStrokeColor();
+            if (config.paraket && isParrotVariant(entity, Parrot.Variant.GREEN)) return bestiaryStrokeColor();
+            if (config.macaw && isParrotVariant(entity, Parrot.Variant.RED_BLUE)) return bestiaryStrokeColor();
         }
 
         if (isHauntedPosition(entity.blockPosition())) {
-            if (config.hideyho && isHideyho(entity)) return HAUNTED_STROKE_COLOR;
+            if (config.hideyho && isHideyho(entity)) return bestiaryStrokeColor();
             if (!hideyhoHiding) {
-                if (config.areita && entity.getType() == EntityType.CAVE_SPIDER) return HAUNTED_STROKE_COLOR;
-                if (config.bloodbat && entity.getType() == EntityType.BAT) return HAUNTED_STROKE_COLOR;
-                if (config.duplico && isSizedEntity(entity, EntityType.INTERACTION, 1.1, 1.1, 1.1)) return HAUNTED_STROKE_COLOR;
-                if (config.gazer && isGazer(entity)) return HAUNTED_STROKE_COLOR;
-                if (config.litterbug && entity.getType() == EntityType.ENDERMITE) return HAUNTED_STROKE_COLOR;
-                if (config.solsnatcher && entity.getType() == EntityType.PHANTOM) return HAUNTED_STROKE_COLOR;
-                if (config.gimmiegold && entity.getType() == EntityType.TROPICAL_FISH) return HAUNTED_STROKE_COLOR;
-                if (config.hideonwall && isHideonwall(entity)) return HAUNTED_STROKE_COLOR;
-                if (config.doomspiral && entity.getType() == EntityType.WARDEN) return HAUNTED_STROKE_COLOR;
+                if (config.areita && entity.getType() == EntityType.CAVE_SPIDER) return bestiaryStrokeColor();
+                if (config.bloodbat && entity.getType() == EntityType.BAT) return bestiaryStrokeColor();
+                if (config.duplico && isSizedEntity(entity, EntityType.INTERACTION, 1.1, 1.1, 1.1)) return bestiaryStrokeColor();
+                if (config.gazer && isGazer(entity)) return bestiaryStrokeColor();
+                if (config.litterbug && entity.getType() == EntityType.ENDERMITE) return bestiaryStrokeColor();
+                if (config.solsnatcher && entity.getType() == EntityType.PHANTOM) return bestiaryStrokeColor();
+                if (config.gimmiegold && entity.getType() == EntityType.TROPICAL_FISH) return bestiaryStrokeColor();
+                if (config.hideonwall && isHideonwall(entity)) return bestiaryStrokeColor();
+                if (config.doomspiral && entity.getType() == EntityType.WARDEN) return bestiaryStrokeColor();
             }
         }
 
         if (isIcyPosition(entity.blockPosition())) {
-            if (config.strongarm && entity.getType() == EntityType.SNOW_GOLEM) return ICY_STROKE_COLOR;
-            if (config.tepid && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.5, 0.4, 0.5)) return ICY_STROKE_COLOR;
-            if (config.polaris && entity.getType() == EntityType.POLAR_BEAR) return ICY_STROKE_COLOR;
-            if (config.shuddersquid && entity.getType() == EntityType.GLOW_SQUID) return ICY_STROKE_COLOR;
-            if (config.billygoat && entity.getType() == EntityType.GOAT) return ICY_STROKE_COLOR;
-            if (config.mantisShrimp && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.7, 0.56, 0.7)) return ICY_STROKE_COLOR;
-            if (config.nozzlenose && entity.getType() == EntityType.DOLPHIN) return ICY_STROKE_COLOR;
-            if (config.troodon && entity.getType() == EntityType.SILVERFISH) return ICY_STROKE_COLOR;
-            if (config.wumpa && entity.getType() == EntityType.RAVAGER) return ICY_STROKE_COLOR;
+            if (config.strongarm && entity.getType() == EntityType.SNOW_GOLEM) return bestiaryStrokeColor();
+            if (config.tepid && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.5, 0.4, 0.5)) return bestiaryStrokeColor();
+            if (config.polaris && entity.getType() == EntityType.POLAR_BEAR) return bestiaryStrokeColor();
+            if (config.shuddersquid && entity.getType() == EntityType.GLOW_SQUID) return bestiaryStrokeColor();
+            if (config.billygoat && entity.getType() == EntityType.GOAT) return bestiaryStrokeColor();
+            if (config.mantisShrimp && isSizedEntity(entity, EntityType.TROPICAL_FISH, 0.7, 0.56, 0.7)) return bestiaryStrokeColor();
+            if (config.nozzlenose && entity.getType() == EntityType.DOLPHIN) return bestiaryStrokeColor();
+            if (config.troodon && entity.getType() == EntityType.SILVERFISH) return bestiaryStrokeColor();
+            if (config.wumpa && entity.getType() == EntityType.RAVAGER) return bestiaryStrokeColor();
         }
 
         return 0;
@@ -1182,7 +1207,7 @@ public final class SafariEsp {
     }
 
     private static void renderTitle(String label, Vec3 position, int textColor) {
-        if (!SkyBlockESPConfig.INSTANCE.general.showTitles) {
+        if (!SkyBlockESPConfig.INSTANCE.debug.showTitles) {
             return;
         }
 
@@ -1201,8 +1226,26 @@ public final class SafariEsp {
         ICY
     }
 
-    private enum HauntedBedGroup {
-        WEST,
-        EAST
+    private enum HauntedBed {
+        WEST_NORTH(new BlockPos(-26, 77, -64), new BlockPos(-25, 77, -64)),
+        WEST_SOUTH(new BlockPos(-26, 77, -69), new BlockPos(-25, 77, -69)),
+        EAST_WEST(new BlockPos(8, 77, -81), new BlockPos(8, 77, -80)),
+        EAST_EAST(new BlockPos(13, 77, -81), new BlockPos(13, 77, -80));
+
+        private final BlockPos first;
+        private final BlockPos second;
+
+        HauntedBed(BlockPos first, BlockPos second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        private boolean contains(BlockPos pos) {
+            return pos.getY() == first.getY()
+                    && pos.getX() >= Math.min(first.getX(), second.getX())
+                    && pos.getX() <= Math.max(first.getX(), second.getX())
+                    && pos.getZ() >= Math.min(first.getZ(), second.getZ())
+                    && pos.getZ() <= Math.max(first.getZ(), second.getZ());
+        }
     }
 }

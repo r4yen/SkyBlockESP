@@ -1,0 +1,29 @@
+package cc.rayen.skyblockesp.client.feature.categories;
+
+import cc.rayen.skyblockesp.client.feature.ESPMarkers;
+import cc.rayen.skyblockesp.client.feature.FairySoulPositions;
+
+import cc.rayen.skyblockesp.client.config.SkyBlockESPConfig;
+import cc.rayen.skyblockesp.client.island.CurrentIsland;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+
+public final class BackwaterBayouESP {
+    private BackwaterBayouESP() {
+    }
+
+    public static void render(Minecraft client) {
+        if (client.level == null || client.player == null || !SkyBlockESPConfig.INSTANCE.backwaterBayou.fairySouls) {
+            return;
+        }
+        if (!CurrentIsland.isIsland("Backwater Bayou")) {
+            return;
+        }
+
+        try (var ignored = client.levelRenderer.collectPerFrameGizmos()) {
+            for (BlockPos pos : FairySoulPositions.forIsland("Backwater Bayou")) {
+                ESPMarkers.renderBlockMarker(pos, "Fairy Soul", ESPMarkers.colorC(), ESPMarkers.colorCFill(), ESPMarkers.colorC());
+            }
+        }
+    }
+}

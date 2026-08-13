@@ -7,6 +7,7 @@ import io.github.notenoughupdates.moulconfig.annotations.ConfigAccordionId;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorAccordion;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorButton;
+import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorColour;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorKeybind;
 import io.github.notenoughupdates.moulconfig.annotations.ConfigOption;
 import io.github.notenoughupdates.moulconfig.common.text.StructuredText;
@@ -21,14 +22,94 @@ public class SkyBlockESPConfig extends Config {
     private static final int DISABLE_ALL_HAUNTED_ENTITIES = 6;
     private static final int ENABLE_ALL_ICY_ENTITIES = 7;
     private static final int DISABLE_ALL_ICY_ENTITIES = 8;
+    private static final int ENABLE_ALL_PRIVATE_ISLAND_ENTITIES = 9;
+    private static final int DISABLE_ALL_PRIVATE_ISLAND_ENTITIES = 10;
+    private static final int ENABLE_ALL_HUB_BESTIARY_ENTITIES = 11;
+    private static final int DISABLE_ALL_HUB_BESTIARY_ENTITIES = 12;
 
     @Expose
     @Category(name = "General", desc = "General ESP settings")
     public General general = new General();
 
     @Expose
+    @Category(name = "Private Island", desc = "Private Island ESP settings")
+    public PrivateIsland privateIsland = new PrivateIsland();
+
+    @Expose
+    @Category(name = "Garden", desc = "Garden ESP settings")
+    public EmptyIsland garden = new EmptyIsland();
+
+    @Expose
+    @Category(name = "Hub", desc = "Hub ESP settings")
+    public Hub hub = new Hub();
+
+    @Expose
+    @Category(name = "The Rift", desc = "The Rift ESP settings")
+    public EmptyIsland theRift = new EmptyIsland();
+
+    @Expose
+    @Category(name = "Dungeon Hub", desc = "Dungeon Hub ESP settings")
+    public FairySoulIsland dungeonHub = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "The Farming Islands", desc = "The Farming Islands ESP settings")
+    public FairySoulIsland theFarmingIslands = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "The Park", desc = "The Park ESP settings")
+    public FairySoulIsland thePark = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Moonglade Marsh", desc = "Moonglade Marsh ESP settings")
+    public FairySoulFloorDropIsland moongladeMarsh = new FairySoulFloorDropIsland();
+
+    @Expose
+    @Category(name = "Torrhus Canyon", desc = "Torrhus Canyon ESP settings")
+    public FairySoulFloorDropIsland torrhusCanyon = new FairySoulFloorDropIsland();
+
+    @Expose
     @Category(name = "Safari", desc = "Safari ESP settings")
     public Desert desert = new Desert();
+
+    @Expose
+    @Category(name = "Gold Mine", desc = "Gold Mine ESP settings")
+    public FairySoulIsland goldMine = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Deep Caverns", desc = "Deep Caverns ESP settings")
+    public FairySoulIsland deepCaverns = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Dwarven Mines", desc = "Dwarven Mines ESP settings")
+    public FairySoulIsland dwarvenMines = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Crystal Hollows", desc = "Crystal Hollows ESP settings")
+    public EmptyIsland crystalHollows = new EmptyIsland();
+
+    @Expose
+    @Category(name = "Spider's Den", desc = "Spider's Den ESP settings")
+    public FairySoulIsland spidersDen = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "The End", desc = "The End ESP settings")
+    public FairySoulIsland theEnd = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Crimson Isle", desc = "Crimson Isle ESP settings")
+    public FairySoulIsland crimsonIsle = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Backwater Bayou", desc = "Backwater Bayou ESP settings")
+    public FairySoulIsland backwaterBayou = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Lotus Atoll", desc = "Lotus Atoll ESP settings")
+    public FairySoulIsland lotusAtoll = new FairySoulIsland();
+
+    @Expose
+    @Category(name = "Jerry's Workshop", desc = "Jerry's Workshop ESP settings")
+    public FairySoulIsland jerrysWorkshop = new FairySoulIsland();
 
     @Expose
     @Category(name = "Debug", desc = "Debug settings")
@@ -50,6 +131,10 @@ public class SkyBlockESPConfig extends Config {
             case DISABLE_ALL_HAUNTED_ENTITIES -> desert.setAllHauntedEntities(false);
             case ENABLE_ALL_ICY_ENTITIES -> desert.setAllIcyEntities(true);
             case DISABLE_ALL_ICY_ENTITIES -> desert.setAllIcyEntities(false);
+            case ENABLE_ALL_PRIVATE_ISLAND_ENTITIES -> privateIsland.setAllEntities(true);
+            case DISABLE_ALL_PRIVATE_ISLAND_ENTITIES -> privateIsland.setAllEntities(false);
+            case ENABLE_ALL_HUB_BESTIARY_ENTITIES -> hub.setAllBestiaryEntities(true);
+            case DISABLE_ALL_HUB_BESTIARY_ENTITIES -> hub.setAllBestiaryEntities(false);
             default -> {
                 return;
             }
@@ -58,15 +143,216 @@ public class SkyBlockESPConfig extends Config {
     }
 
     public static class General {
-        @ConfigOption(name = "Debug Functions", desc = "Enable debug-only options and keybinds.")
-        @ConfigEditorAccordion(id = 1)
-        public boolean debugFunctions = false;
+        @Expose
+        @ConfigOption(name = "Color A", desc = "Color for bestiary entity ESP markers.")
+        @ConfigEditorColour
+        public String colorA = "0:255:64:160:255";
 
         @Expose
-        @ConfigOption(name = "Show Titles", desc = "Show labels on ESP markers.")
+        @ConfigOption(name = "Color B", desc = "Color for general entity ESP markers.")
+        @ConfigEditorColour
+        public String colorB = "0:255:255:85:85";
+
+        @Expose
+        @ConfigOption(name = "Color C", desc = "Color for non-entity ESP markers.")
+        @ConfigEditorColour
+        public String colorC = "0:255:255:85:85";
+
+        @ConfigOption(name = "Jerry Entities", desc = "")
+        @ConfigEditorAccordion(id = 1)
+        public boolean jerryEntities = false;
+
+        @ConfigOption(name = "Spooky Festival", desc = "")
+        @ConfigEditorAccordion(id = 2)
+        public boolean spookyFestival = false;
+
+        @Expose
+        @ConfigOption(name = "Debug Functions", desc = "Enable debug-only options and keybinds.")
+        @ConfigEditorBoolean
+        public boolean debugFunctions = false;
+    }
+
+    public static class EmptyIsland {
+    }
+
+    public static class FairySoulIsland {
+        @Expose
+        @ConfigOption(name = "Fairy Souls", desc = "Show ESP markers for Fairy Souls.")
+        @ConfigEditorBoolean
+        public boolean fairySouls = false;
+    }
+
+    public static class FairySoulFloorDropIsland {
+        @Expose
+        @ConfigOption(name = "Fairy Souls", desc = "Show ESP markers for Fairy Souls.")
+        @ConfigEditorBoolean
+        public boolean fairySouls = false;
+
+        @Expose
+        @ConfigOption(name = "Floor Drops", desc = "Show ESP markers for floor drops.")
+        @ConfigEditorBoolean
+        public boolean floorDrops = false;
+    }
+
+    public static class PrivateIsland {
+        @Expose
+        @ConfigOption(name = "Minions", desc = "Show ESP markers for minions.")
+        @ConfigEditorBoolean
+        public boolean minions = false;
+
+        @ConfigOption(name = "Entities", desc = "")
+        @ConfigEditorAccordion(id = 1)
+        public boolean entities = false;
+
+        @ConfigOption(name = "All Entities", desc = "Enable every Private Island entity ESP.")
+        @ConfigEditorButton(runnableId = ENABLE_ALL_PRIVATE_ISLAND_ENTITIES, buttonText = "Enable")
+        @ConfigAccordionId(id = 1)
+        public int enableAllEntities = 0;
+
+        @ConfigOption(name = "All Entities", desc = "Disable every Private Island entity ESP.")
+        @ConfigEditorButton(runnableId = DISABLE_ALL_PRIVATE_ISLAND_ENTITIES, buttonText = "Disable")
+        @ConfigAccordionId(id = 1)
+        public int disableAllEntities = 0;
+
+        @Expose
+        @ConfigOption(name = "Bat", desc = "Show ESP markers for Bats.")
         @ConfigEditorBoolean
         @ConfigAccordionId(id = 1)
-        public boolean showTitles = false;
+        public boolean bat = false;
+
+        @Expose
+        @ConfigOption(name = "Creeper", desc = "Show ESP markers for Creepers.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean creeper = false;
+
+        @Expose
+        @ConfigOption(name = "Enderman", desc = "Show ESP markers for Endermen.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean enderman = false;
+
+        @Expose
+        @ConfigOption(name = "Skeleton", desc = "Show ESP markers for Skeletons.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean skeleton = false;
+
+        @Expose
+        @ConfigOption(name = "Slime", desc = "Show ESP markers for Slimes.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean slime = false;
+
+        @Expose
+        @ConfigOption(name = "Spider", desc = "Show ESP markers for Spiders.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean spider = false;
+
+        @Expose
+        @ConfigOption(name = "Witch", desc = "Show ESP markers for Witches.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean witch = false;
+
+        @Expose
+        @ConfigOption(name = "Zombie", desc = "Show ESP markers for Zombies.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean zombie = false;
+
+        private void setAllEntities(boolean enabled) {
+            bat = enabled;
+            creeper = enabled;
+            enderman = enabled;
+            skeleton = enabled;
+            slime = enabled;
+            spider = enabled;
+            witch = enabled;
+            zombie = enabled;
+        }
+    }
+
+    public static class Hub {
+        @Expose
+        @ConfigOption(name = "Fairy Souls", desc = "Show ESP markers for Hub Fairy Souls.")
+        @ConfigEditorBoolean
+        public boolean fairySouls = false;
+
+        @ConfigOption(name = "Bestiary Entities", desc = "")
+        @ConfigEditorAccordion(id = 1)
+        public boolean bestiaryEntities = false;
+
+        @ConfigOption(name = "All Entities", desc = "Enable every Hub bestiary entity ESP.")
+        @ConfigEditorButton(runnableId = ENABLE_ALL_HUB_BESTIARY_ENTITIES, buttonText = "Enable")
+        @ConfigAccordionId(id = 1)
+        public int enableAllBestiaryEntities = 0;
+
+        @ConfigOption(name = "All Entities", desc = "Disable every Hub bestiary entity ESP.")
+        @ConfigEditorButton(runnableId = DISABLE_ALL_HUB_BESTIARY_ENTITIES, buttonText = "Disable")
+        @ConfigAccordionId(id = 1)
+        public int disableAllBestiaryEntities = 0;
+
+        @Expose
+        @ConfigOption(name = "Crypt Ghoul", desc = "Show ESP markers for Crypt Ghouls.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean cryptGhoul = false;
+
+        @Expose
+        @ConfigOption(name = "Gholden Ghoul", desc = "Show ESP markers for Gholden Ghouls.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean gholdenGhoul = false;
+
+        @Expose
+        @ConfigOption(name = "Graveyard Zombie", desc = "Show ESP markers for Graveyard Zombies.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean graveyardZombie = false;
+
+        @Expose
+        @ConfigOption(name = "Old Wolf", desc = "Show ESP markers for Old Wolves.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean oldWolf = false;
+
+        @Expose
+        @ConfigOption(name = "Shiny Pig", desc = "Show ESP markers for Shiny Pigs.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean shinyPig = false;
+
+        @Expose
+        @ConfigOption(name = "Wolf", desc = "Show ESP markers for Wolves.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean wolf = false;
+
+        @Expose
+        @ConfigOption(name = "Zombie Villager", desc = "Show ESP markers for Zombie Villagers.")
+        @ConfigEditorBoolean
+        @ConfigAccordionId(id = 1)
+        public boolean zombieVillager = false;
+
+        @ConfigOption(name = "Diana", desc = "")
+        @ConfigEditorAccordion(id = 2)
+        public boolean diana = false;
+
+        @ConfigOption(name = "Festival", desc = "")
+        @ConfigEditorAccordion(id = 3)
+        public boolean festival = false;
+
+        private void setAllBestiaryEntities(boolean enabled) {
+            cryptGhoul = enabled;
+            gholdenGhoul = enabled;
+            graveyardZombie = enabled;
+            oldWolf = enabled;
+            shinyPig = enabled;
+            wolf = enabled;
+            zombieVillager = enabled;
+        }
     }
 
     public static class Desert {
@@ -101,7 +387,7 @@ public class SkyBlockESPConfig extends Config {
         @ConfigAccordionId(id = 1)
         public boolean rockmiteHome = false;
 
-        @ConfigOption(name = "Entities", desc = "")
+        @ConfigOption(name = "Bestiary Entities", desc = "")
         @ConfigEditorAccordion(id = 10)
         @ConfigAccordionId(id = 1)
         public boolean cavernEntities = false;
@@ -192,7 +478,7 @@ public class SkyBlockESPConfig extends Config {
         @ConfigAccordionId(id = 2)
         public boolean forestBirdfeeder = false;
 
-        @ConfigOption(name = "Entities", desc = "")
+        @ConfigOption(name = "Bestiary Entities", desc = "")
         @ConfigEditorAccordion(id = 20)
         @ConfigAccordionId(id = 2)
         public boolean forestEntities = false;
@@ -289,7 +575,7 @@ public class SkyBlockESPConfig extends Config {
         @ConfigAccordionId(id = 3)
         public boolean shiningCoinWater = false;
 
-        @ConfigOption(name = "Entities", desc = "")
+        @ConfigOption(name = "Bestiary Entities", desc = "")
         @ConfigEditorAccordion(id = 30)
         @ConfigAccordionId(id = 3)
         public boolean hauntedEntities = false;
@@ -374,7 +660,7 @@ public class SkyBlockESPConfig extends Config {
         @ConfigAccordionId(id = 4)
         public boolean icyFloorDrops = false;
 
-        @ConfigOption(name = "Entities", desc = "")
+        @ConfigOption(name = "Bestiary Entities", desc = "")
         @ConfigEditorAccordion(id = 40)
         @ConfigAccordionId(id = 4)
         public boolean icyEntities = false;
@@ -494,6 +780,11 @@ public class SkyBlockESPConfig extends Config {
     }
 
     public static class Debug {
+        @Expose
+        @ConfigOption(name = "Show Titles", desc = "Show labels on ESP markers.")
+        @ConfigEditorBoolean
+        public boolean showTitles = false;
+
         @Expose
         @ConfigOption(name = "Block Inspect Key", desc = "Print debug data for the targeted block.")
         @ConfigEditorKeybind(defaultKey = -1)

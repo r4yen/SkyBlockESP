@@ -1,0 +1,14 @@
+package cc.rayen.skyblockesp.client.feature.categories;
+
+import cc.rayen.skyblockesp.client.feature.ESPMarkers;
+import cc.rayen.skyblockesp.client.feature.FairySoulPositions;
+
+import net.minecraft.client.Minecraft;
+
+public final class TheRiftESP {
+    private TheRiftESP() {
+    }
+
+    public static void render(Minecraft client) {
+    }
+}
