@@ -13,7 +13,7 @@ public abstract class FontTextReplaceMixin {
             method = "prepareText(Ljava/lang/String;FFIZI)Lnet/minecraft/client/gui/Font$PreparedText;",
             at = @At("HEAD"),
             argsOnly = true,
-            name = "text"
+            ordinal = 0
     )
     private String skyblockesp$replacePrepareString(String text) {
         return NameStyler.replacePlain(text);
@@ -23,7 +23,7 @@ public abstract class FontTextReplaceMixin {
             method = "prepareText(Lnet/minecraft/util/FormattedCharSequence;FFIZZI)Lnet/minecraft/client/gui/Font$PreparedText;",
             at = @At("HEAD"),
             argsOnly = true,
-            name = "text"
+            ordinal = 0
     )
     private FormattedCharSequence skyblockesp$replacePrepareSequence(FormattedCharSequence text) {
         return NameStyler.styleSequence(text);
@@ -33,7 +33,7 @@ public abstract class FontTextReplaceMixin {
             method = "width(Ljava/lang/String;)I",
             at = @At("HEAD"),
             argsOnly = true,
-            name = "text"
+            ordinal = 0
     )
     private String skyblockesp$replaceWidthString(String text) {
         return NameStyler.replacePlain(text);
@@ -43,7 +43,7 @@ public abstract class FontTextReplaceMixin {
             method = "width(Lnet/minecraft/util/FormattedCharSequence;)I",
             at = @At("HEAD"),
             argsOnly = true,
-            name = "text"
+            ordinal = 0
     )
     private FormattedCharSequence skyblockesp$replaceWidthSequence(FormattedCharSequence text) {
         return NameStyler.styleSequence(text);
